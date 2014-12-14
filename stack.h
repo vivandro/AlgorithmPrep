@@ -8,7 +8,7 @@ template <typename T>
 class Stack {
 
 public:
-bool push(T item) {
+bool push(const T &item) { // We have no need for modifying the item, and we need not copy it directly here either.
 	try {
 		items.push_back(item);
 	} catch (...) {
@@ -33,7 +33,7 @@ bool pop() {
 
 bool peek(T &item) { // Asking for a ref instead of a pointer allows us to skip nullptr checking and thus saves us from related errors/extra code.
 	if (!is_empty()) {
-		item = items[items.size()-1];
+		item = (items[items.size()-1]);
 		return true;
 	} else {
 		return false;
