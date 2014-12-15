@@ -13,7 +13,7 @@ void sort(T begin, T end) {
 	}
 
 	/*
-	 Loop Invariant: sub-array to the left of i is always sorted. 
+	 * Loop Invariant: sub-array to the left of i is always sorted. 
 	 */
 	for (	auto i = begin + 1; 	// i indicates the original position of the element we plan to add into the sorted sub array.
 		i != end; 		// We can stop adding new elements when we run out of them.
@@ -24,7 +24,7 @@ void sort(T begin, T end) {
 			&& (*j < *(j-1));// if it is no longer smaller than the element on its left, it need not be moved further left.
 			 --j) 		// Since we moved it one position left in the block below, move j left to again refer to the newly introduced element.
 			{ // Move the jth element one position to its left.
-			// swap 
+			// Swap with the left-side neighbour in order to move left.
 			auto k = j-1;
 			auto t = *k;
 			*k = *j;
