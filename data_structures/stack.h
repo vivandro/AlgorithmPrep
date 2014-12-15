@@ -25,7 +25,7 @@ bool pop() {
 	}
 }
 
-bool peek(T &item) { // Asking for a ref instead of a pointer allows us to skip nullptr checking and thus saves us from related errors/extra code.
+bool peek(T &item) const { // Asking for a ref instead of a pointer allows us to skip nullptr checking and thus saves us from related errors/extra code.
 	if (!is_empty()) {
 		item = (items[items.size()-1]);
 		return true;
@@ -34,7 +34,7 @@ bool peek(T &item) { // Asking for a ref instead of a pointer allows us to skip 
 	}
 }
 
-bool is_empty() {
+bool is_empty() const {
 	return items.empty();
 }
 
