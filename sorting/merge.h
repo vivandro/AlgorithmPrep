@@ -22,6 +22,13 @@ void sort(T begin, T end) {
 	sortHelper(begin, end, scratchpad);
 } // FN : sort
 
+// Overloaded template method for handling pointers
+template <typename T>
+void sort(T *begin, T *end) {
+	std::vector<T> scratchpad(end-begin);
+	sortHelper(begin, end, scratchpad);
+} // FN : sort
+
 template <typename T, typename V>
 void sortHelper(T begin, T end, V scratchpad) {
 	using namespace std;
