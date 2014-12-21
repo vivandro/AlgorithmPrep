@@ -68,8 +68,15 @@ void inorderTraverse(T *root, V foo) {
 	if (!root) {
 		return;
 	}
+	bool fooAlreadyReturnedFalse = false;
+	auto fooBar = [&fooAlreadyReturnedFalse, &foo](T *node) -> bool {
+		bool foosReturnValue = foo(node);
+		fooAlreadyReturnedFalse = (false == foosReturnValue);
+		return foosReturnValue;
+	};
+
 	inorderTraverse(root->lChild, foo);
-	if (!foo(root)) {
+	if (fooAlreadyReturnedFalse || !foo(root)) {
 		return;
 	}
 	inorderTraverse(root->rChild, foo);
