@@ -28,3 +28,23 @@ Execution is just as simple:
 Makefiles: This code base, at least currently, is not meant to generate a single target. Almost every .cpp has its own main(). As such the minimal command line mentioned above is not only sufficient, but also the sensible choice. With an automated build, all we will achieve is a bunch of independent executables(one per .cpp). This might be useful to automate regression testing at some point. But as of today, each .cpp stands on its own. It is also merely a test-suite targetting a single study subject. So, I don't envisage changes in one header file propogating to break more than one(or maybe 3 when we get to graphs) .cpp file(s). Dropping both makefiles and regression arrangements until such a time as when I decide to break the file structure rule mentioned above.
 
 
+Notes on what I plan to explicitly avoid from all my code:  
+1) Exceptions: I will neither handle them nor throw them. This will obviously mould the  
+   function signatures I use. Some options that come to mind:   
+   i)  Make the caller pass references so that certain types of error checks are forced at the caller level.  
+   ii) Return error codes from methods and use in-out parameters to return results if the results do not   
+       have a meaningful failure value (for example: bool stringToInt(const string &s, int &rval) )  
+   I will learn a few more tricks and interesting scenarios along the way. Will try to document them in this README as well.  
+2) Naked Pointers: Since we have simple STL options to rid our code of the unnecessary complexity of dealing  
+   with naked pointers, I will try to stay clear of these. I didnt try this right from the start,  
+   but starting with the binary tree code, I plan to follow this through.  
+3) Explicit new and delete: Use alternatives wherever possible. STL containers can save copies of the   
+   objects and discard them when we discard the STL container. unique_ptr and shared_ptr will help keep   
+   the STL containers and custom objects alive for the right duration. These two might help me avoid   
+   exceptions (in cases where resources need to be released safely) and naked pointers as well.   
+   To avoid explicit new statements, I'll need to go for factory methods within my classes. For   
+   library classes, I will not have a choice but to use new.   
+4) Template Meta Programming: Just because it's tempting to study it, but I don't have enough time to   
+   focus on it right now. I'd rather spend the time on newer algorithms and Swift programming.   
+
+
