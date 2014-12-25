@@ -20,7 +20,7 @@ I simply go for study_subject.cpp which incorporates both the study subject and 
 in a single file.  
   
 This is the commandline I use most ferquently for compiling(There are no exceptions today):  
-g++ -std=c++11 test_study_subject.cpp  
+g++ -std=c++1y test_study_subject.cpp  
   
 Execution is just as simple:  
 ./a.out  

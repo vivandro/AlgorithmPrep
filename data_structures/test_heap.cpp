@@ -23,6 +23,7 @@
 #include "heap.h"
 
 using namespace std;
+using namespace vvalgo;
 
 template <typename T>
 void printAll(T b, T e) {
@@ -35,16 +36,26 @@ void printAll(T b, T e) {
 
 int main () {
 	vector<long> v = { 99, 89, 79, 69, 59, 49, 39, 29, 19, 9};
+    Heap<decltype(v.begin())> heap(begin(v), end(v));
 
+    cout << "Printing original array :\n";
 	printAll(begin(v), end(v));
-
-	vvalgo::MinHeap::buildHeap(begin(v), end(v));
-	printAll(begin(v), end(v));
-	
-	//vvalgo::MinHeap::extractMin(begin(v), end(v));
-	//printAll(begin(v), end(v));
-	
-	vvalgo::MinHeap::sortHeap(begin(v), end(v));
-	printAll(begin(v), end(v));
-	
+    
+    cout << "Printing heap created from that array :\n";
+    printAll(begin(heap), end(heap));
+    
+    cout << "Sorting the heap. This is how it looks after sorting:\n";
+    heap.sort();
+    printAll(begin(heap), end(heap));
+    
+    
+    long head;
+    heap.peekHead(head);
+    cout << "head of the heap --> " << head << endl;
+    heap.popHead();
+    heap.peekHead(head);
+    cout << "head of the heap --> " << head << endl;
+    heap.popHead();
+    heap.peekHead(head);
+    cout << "head of the heap --> " << head << endl;
 }
