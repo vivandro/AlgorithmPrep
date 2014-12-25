@@ -61,38 +61,53 @@ private:
  * The function foo passed to the traversal function should process the node
  * and return true if it wants the traversal to continue and false if it
  * wants the traversal to stop.
- * expected signature: bool (*)(T *);
+ * expected signature for foo(): bool (*)(T *); // return true if you have accomplished your goal and want traversal to stop prematurely.
+ * It is our responsibility to ensure that foo() is never called once it has returned true. This way,
+ * all the complexity related to ensuring this lies within the traversal code rather than being spread 
+ * out among all the implementations of foo(). It would incur a much higher overall test load if that
+ * were the case. And that will result in less bugs in the overall system.
  */
 template <typename T, typename V>
 void inorderTraverse(T *root, V foo) {
-	if (!root) {
-		return;
-	}
-	bool fooAlreadyReturnedFalse = false;
-	auto fooBar = [&fooAlreadyReturnedFalse, &foo](T *node) -> bool {
-		bool foosReturnValue = foo(node);
-		fooAlreadyReturnedFalse = (false == foosReturnValue);
-		return foosReturnValue;
-	};
-
-	inorderTraverse(root->lChild, foo);
-	if (fooAlreadyReturnedFalse || !foo(root)) {
-		return;
-	}
-	inorderTraverse(root->rChild, foo);
-	
+    bool stopTraversal = false;
+    std::function<void (T *)> inorderTraversalHelper = [&](T *node) {
+        if (stopTraversal || !node) {
+            return;
+        }
+        
+        inorderTraversalHelper(node->lChild);
+        if (stopTraversal) {
+            return;
+        }
+        
+        if (foo(node)) {// I'm avoiding if (stopTraversal = foo(node)) because that has the potential to
+                        // set stopTraversal to false. We don't ever want to do that except during
+                        // initialization. This simple constraint on stopTraversal will help us avoid
+                        // bugs where it gets reset to false after it was set to true. Once set to true,
+                        // it should always remain true. Plus, that condition also has the potential of
+                        // confusing future generations who might just look at it as a bug where we used
+                        // a single '=' instead of '=='.
+            stopTraversal = true;
+            return;
+        }
+        
+        inorderTraversalHelper(node->rChild);
+    };
+    
+    // Kick off the traversal.
+    inorderTraversalHelper(root);
 } // FN : inorderTraverse
 
 template <typename T, typename V>
 T *findNodeWithValue(T *root, V value) {
 	T *match = nullptr;
-
+    
 	auto finder = [&match, &value] (T *node) -> bool {
-		if (node && (node->value == value)) {
+		if ( node && (node->value == value) ) {
 			match = node;
-			return false;
+            return true;// True indicates that we have accomplished our task and traversal can end prematurely.
 		}
-		return true;
+        return false;
 	};
 
 	inorderTraverse(root, finder);
@@ -125,15 +140,15 @@ T *findParentOfNodeWithValue(T *root, V value, bool &foundValueInRoot) {
 			T *l = node->lChild;
 			if (l && (l->value == value)) {
 				parent = node;
-				return false;
+                return true;
 			}
 			T *r = node->rChild;
 			if (r && (r->value == value)) {
 				parent = node;
-				return false;
+                return true;
 			}
 		}
-		return true;
+        return false;
 	};
 
 	inorderTraverse(root, finder);
@@ -158,10 +173,11 @@ int main() {
 	root->replaceRightChild(new BinaryTree<ll>{200});
 
 	cout << "\nInorder traversal\n";
-	inorderTraverse(root, [](BinaryTree<ll> *node){
-							cout << node->value << " "; 
-							return true;
-						      });
+	inorderTraverse(root, [](BinaryTree<ll> *node) -> bool{
+        cout << node->value << " ";
+        // since we do not want the traversal to stop prematurely, we always return false.
+        return true;
+    });
 	cout << endl;
 
 	auto node = findNodeWithValue(root, 100);
