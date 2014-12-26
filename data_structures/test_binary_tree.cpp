@@ -58,6 +58,69 @@ private:
 }; // CS : BinaryTree
 
 /*
+ * General traversal function. It invokes pre(), in() and post() callbacks in the pre-order, inorder 
+ * and post-order traversal fashion.
+ *
+ * Important Points to Note:
+ * - On Callbacks: If we perform a particular traversal, we guarantee that the relevant callback will be executed.
+ * - On Traversal: Once a callback returns true, to indicate that the traversal can stop, we prevent further traversal.
+ *
+ * As a result of these two points, an interesting situation arises. If we have gone down the left
+ * subtree and some callback returns true, do we invoke the in() callback of the node? If we had gone
+ * down the right subtree and then a callback returned true, do we invoke the post() callback?
+ * The answer is, yes we do. This comes from the first of the two assurances we mentioned above. If
+ * we have performed a particular traversal, we will invoke the relevant callback.
+ *
+ * This has a very interesting repurcussions on the way you would write callbacks. Since all the pre() callbacks
+ * are called once we descend down a tree, pre() will never be invoked once any of the callbacks stops the traversal.
+ * in() is performed after the left subtree has been traversed (may be partially traversed if a callback stopped the
+ * traversal). This means, in() should be invoked regardless of whether or not further traversal has been cancelled.
+ * Similar situation applies for post(). Once we have traversed down the right subtree, we are obliged to invoke
+ * post() regardless of any indications related to stopping traversal.
+ *
+ */
+template <typename T, typename U, typename V, typename W> // TIP: Always use different typenames for template arguments.
+                                                          // Template argument deduction is best left to the compiler. Trying
+                                                          // to force some of the apparently equivalent signatures is not a good
+                                                          // idea because template instantiation does not do type conversion, making
+                                                          // it too easy to fail during compilation.
+void traverse(T *root, U pre, V in, W post) {
+    bool stopTraversal = false;
+    std::function<void (T *)> traversalHelper = [&](T *node) {
+        if (stopTraversal || !node) {
+            return;
+        }
+        
+        if (pre(node)) { // Perform pre-order processing
+            stopTraversal = true; // I'm avoiding if (stopTraversal = foo(node)) because that has the potential to
+            // set stopTraversal to false. We don't ever want to do that except during
+            // initialization. This simple constraint on stopTraversal will help us avoid
+            // bugs where it gets reset to false after it was set to true. Once set to true,
+            // it should always remain true. Plus, that condition also has the potential of
+            // confusing future generations who might just look at it as a bug where we used
+            // a single '=' instead of '=='.
+            return;
+        }
+        
+        traversalHelper(node->lChild); // Traverse the left subtree.
+        if (in(node)) { // // Perform inorder processing.
+            stopTraversal = true;
+        }
+        if (stopTraversal) {
+            return;
+        }
+        
+        traversalHelper(node->rChild); // Traverse the righ subtree.
+        if (post(node)) { // Perform post-order processing
+            stopTraversal = true;
+        }
+    };
+    
+    // Kick off the traversal
+    traversalHelper(root);
+}
+
+/*
  * The function foo passed to the traversal function should process the node
  * and return true if it wants the traversal to continue and false if it
  * wants the traversal to stop.
@@ -68,35 +131,22 @@ private:
  * were the case. And that will result in less bugs in the overall system.
  */
 template <typename T, typename V>
-void inorderTraverse(T *root, V foo) {
-    bool stopTraversal = false;
-    std::function<void (T *)> inorderTraversalHelper = [&](T *node) {
-        if (stopTraversal || !node) {
-            return;
-        }
-        
-        inorderTraversalHelper(node->lChild);
-        if (stopTraversal) {
-            return;
-        }
-        
-        if (foo(node)) {// I'm avoiding if (stopTraversal = foo(node)) because that has the potential to
-                        // set stopTraversal to false. We don't ever want to do that except during
-                        // initialization. This simple constraint on stopTraversal will help us avoid
-                        // bugs where it gets reset to false after it was set to true. Once set to true,
-                        // it should always remain true. Plus, that condition also has the potential of
-                        // confusing future generations who might just look at it as a bug where we used
-                        // a single '=' instead of '=='.
-            stopTraversal = true;
-            return;
-        }
-        
-        inorderTraversalHelper(node->rChild);
-    };
-    
-    // Kick off the traversal.
-    inorderTraversalHelper(root);
+    void inorderTraverse(T *root, V foo) {
+    auto noop = [](T *){return false;};
+    traverse(root, noop, foo, noop);
 } // FN : inorderTraverse
+
+template <typename T, typename V>
+void preorderTraverse(T *root, V foo) {
+    auto noop = [](T *){return false;};
+    traverse(root, foo, noop, noop);
+} // FN : preorderTraverse
+
+template <typename T, typename V>
+void postorderTraverse(T *root, V foo) {
+    auto noop = [](T *){return false;};
+    traverse(root, noop, noop, foo);
+} // FN : postorderTraverse
 
 template <typename T, typename V>
 T *findNodeWithValue(T *root, V value) {
@@ -176,7 +226,7 @@ int main() {
 	inorderTraverse(root, [](BinaryTree<ll> *node) -> bool{
         cout << node->value << " ";
         // since we do not want the traversal to stop prematurely, we always return false.
-        return true;
+        return false;
     });
 	cout << endl;
 
@@ -195,4 +245,23 @@ int main() {
 	cout << " is 100 the parent of 50? --> ";
 	p0 ? (cout << p0->value) : cout << "nope";
 	cout << endl;
+    
+    auto printer = [](const BinaryTree<ll> *node) -> bool {
+        cout << node->value << " ";
+        // since we do not want the traversal to stop prematurely, we always return false.
+        return false;
+    };
+    auto dummy = [](const BinaryTree<ll> *node) -> bool {return false;};
+    cout << "\nPreorder traversal\n";
+    preorderTraverse(root, printer);
+    cout << endl;
+    cout << "\nInorder traversal\n";
+    traverse( root,
+             dummy,
+             printer,
+             dummy);
+    cout << endl;
+    cout << "\nPostorder traversal\n";
+    postorderTraverse(root, printer);
+    cout << endl;
 }
