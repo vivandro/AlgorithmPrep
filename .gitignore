@@ -29,3 +29,6 @@
 
 # Vim temporary files
 *.swp
+
+# Debug temporaries
+*.out.dSYM**

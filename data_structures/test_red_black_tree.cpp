@@ -98,7 +98,7 @@ namespace vvalgo {
         auto noop = [](T *){return false;};
         traverse(root, noop, noop, foo);
     } // FN : postorderTraverse
-    
+
     namespace BST { // Encapsulating BST related functions inside a separate namespace.
         // find() will perform binary search since we are dealing with a binary search tree
         template <typename BSTType, typename ValueType>
@@ -111,7 +111,7 @@ namespace vvalgo {
             }
             return find(root->right, val);
         }
-        
+
         // insert() will perform a binary search to find the entry or insert the node at the right location
         template <typename BSTType, typename ValueType>
         BSTType *insert(BSTType **root, ValueType val) {
@@ -127,11 +127,49 @@ namespace vvalgo {
             }
             return insert(&(*root)->right, val);
         }
+
+        // returns the minimum node in the BST
+        template <typename BSTType>
+        BSTType *min(BSTType *root) {
+            if (!root || !root->left) {
+                return root;
+            }
+            return min(root->left);
+        }
+
+        // Removes a node with the given value, if it exists.
+        template <typename BSTType, typename ValueType>
+        void remove(BSTType **root, ValueType val) {
+            if (!root || !*root) {
+                return;
+            }
+            BSTType *node = *root;
+            if (node->value == val) {
+                // TODO: add other cases as well
+                if (!node->left && !node->right) {
+                    *root = nullptr;
+                    delete node;
+                } else if (node->left && node->right) {
+                    BSTType *successor = min(node->right);
+                    node->value = successor->value;
+                    remove(&(node->right), successor->value);
+                } else { // Target node has only one child.
+                    BSTType *loneChild = (node->left) ? node->left : node->right;
+                    *root = loneChild;
+                    node->left = node->right = nullptr;// nil out child pointers because delete cascades to these via the destructor.
+                    delete node;
+                }
+            } else if (val < node->value) {
+                remove(&(node->left), val);
+            } else {
+                remove(&(node->right), val);
+            }
+        }
         
     } // NS : BST
     
     
-    template <typename ValueType, typename OrderPredicateType = std::function<bool (const ValueType&, const ValueType&)>>
+    template <typename ValueType>
     class RBTree {
     public:
         ValueType value;
@@ -173,11 +211,47 @@ int main() {
     BST::insert(&root, 1500);
     BST::insert(&root, 250);
     BST::insert(&root, 750);
+    BST::insert(&root, 2000);
+    BST::insert(&root, 3000);
     auto printer = [](decltype(root) node)->bool{
         cout << node->value << " ";
         return false;
     };
+    cout << "Inorder: -> ";
     inorderTraverse( root,
                      printer);
+    cout << endl;
+    
+    // remove leaf node
+    BST::remove(&root, 3000);
+    cout << "Inorder: -> ";
+    inorderTraverse( root,
+                    printer);
+    cout << endl;
+    // remove node with one child
+    BST::remove(&root, 1500);
+    cout << "Inorder: -> ";
+    inorderTraverse( root,
+                    printer);
+    cout << endl;
+    // remove node with 2 children
+    BST::remove(&root, 500);
+    cout << "Inorder: -> ";
+    inorderTraverse( root,
+                    printer);
+    cout << endl;
+    
+    // remove root
+    BST::remove(&root, 1000);
+    cout << "Inorder: -> ";
+    inorderTraverse( root,
+                    printer);
+    cout << endl;
+    
+    // remove root
+    BST::insert(&root, 1500);
+    cout << "Inorder: -> ";
+    inorderTraverse( root,
+                    printer);
     cout << endl;
 }
