@@ -114,18 +114,18 @@ namespace vvalgo {
 
         // insert() will perform a binary search to find the entry or insert the node at the right location
         template <typename BSTType, typename ValueType>
-        BSTType *insert(BSTType **root, ValueType val) {
+        BSTType *insert(BSTType **root, ValueType val, BSTType *parentOfRoot = nullptr) {
             if (!root) {
                 return nullptr;
             }
             if (!(*root)) {
-                *root = new BSTType(val);
+                *root = new BSTType(val, nullptr, nullptr, parentOfRoot);
                 return *root;
             }
             if (val < (*root)->value) {
-                return insert(&(*root)->left, val);
+                return insert(&(*root)->left, val, *root);
             }
-            return insert(&(*root)->right, val);
+            return insert(&(*root)->right, val, *root);
         }
 
         // returns the minimum node in the BST
@@ -144,26 +144,39 @@ namespace vvalgo {
                 return;
             }
             BSTType *node = *root;
-            if (node->value == val) {
-                // TODO: add other cases as well
-                if (!node->left && !node->right) {
+            if (node->value == val) { // Found the target node.
+                if (!node->left && !node->right) {      // Target is a leaf node.
                     *root = nullptr;
                     delete node;
-                } else if (node->left && node->right) {
+                } else if (node->left && node->right) { // Target has two children.
                     BSTType *successor = min(node->right);
                     node->value = successor->value;
                     remove(&(node->right), successor->value);
-                } else { // Target node has only one child.
+                } else {                                // Target node has only one child.
                     BSTType *loneChild = (node->left) ? node->left : node->right;
                     *root = loneChild;
-                    node->left = node->right = nullptr;// nil out child pointers because delete cascades to these via the destructor.
+                    loneChild->parent = node->parent; // Update the parent pointer of the lone child.
+                    node->left = node->right = node->parent = nullptr;// nil out child pointers because delete cascades to these via the destructor.
                     delete node;
                 }
-            } else if (val < node->value) {
+            } else if (val < node->value) { // Search in the left subtree
                 remove(&(node->left), val);
-            } else {
+            } else {                        // Search in the left subtree
                 remove(&(node->right), val);
             }
+        }
+        
+        // Test ancestory
+        template <typename TType>
+        size_t depth(TType *node) {
+            if (!node) {
+                return 0;   // This has an overloaded meaning now. 0 means the node does not exist in the tree.
+                            // It also prevents us from assigning this depth to the root noew. I could
+                            // circumvent this by returning -1 for !node, while returning 0 for !node->parent.
+                            // But using a signed type for the return value, and overloading the meaning of the
+                            // return value doesnt seem like the right solution. Will mull this over later.
+            }
+            return 1 + depth(node->parent); // To make this tail recursive, I can add an accumulator into the parameter list.
         }
         
     } // NS : BST
@@ -254,4 +267,11 @@ int main() {
     inorderTraverse( root,
                     printer);
     cout << endl;
+    
+    // parent pointer check.
+    cout << "Non existant 1000 is this deep: " << BST::depth(BST::find(root, 1000)) << endl;
+    cout << "------------  250 is this deep: " << BST::depth(BST::find(root, 250)) << endl;
+    cout << "------------  750 is this deep: " << BST::depth(BST::find(root, 750)) << endl;
+    cout << "------------ 1500 is this deep: " << BST::depth(BST::find(root, 1500)) << endl;
+    cout << "------------ 2000 is this deep: " << BST::depth(BST::find(root, 2000)) << endl;
 }
